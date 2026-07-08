@@ -94,7 +94,7 @@ def compute_inv_no(year: int, month: int, wd_index: int, slot: int) -> int:
 # ===== GEMINI RECEIPT PARSER =====
 def parse_receipt_with_gemini(file_bytes: bytes, mime_type: str) -> dict:
     """Use Gemini vision to extract receipt data."""
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     prompt = """อ่านใบเสร็จนี้แล้วตอบเป็น JSON เท่านั้น ไม่ต้องอธิบายเพิ่ม:
 {
   "doc_no": "เลขที่เอกสาร เช่น ABBPTC26070003",
