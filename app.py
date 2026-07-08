@@ -2,7 +2,7 @@ import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-import google.generativeai as genai
+from google import genai as genai_new
 import json
 import re
 from datetime import date
@@ -94,7 +94,6 @@ def compute_inv_no(year: int, month: int, wd_index: int, slot: int) -> int:
 # ===== GEMINI RECEIPT PARSER =====
 def parse_receipt_with_gemini(file_bytes: bytes, mime_type: str) -> dict:
     """Use Gemini vision to extract receipt data."""
-    model = genai.GenerativeModel("gemini-2.0-flash")
     prompt = """อ่านใบเสร็จนี้แล้วตอบเป็น JSON เท่านั้น ไม่ต้องอธิบายเพิ่ม:
 {
   "doc_no": "เลขที่เอกสาร เช่น ABBPTC26070003",
@@ -108,10 +107,13 @@ def parse_receipt_with_gemini(file_bytes: bytes, mime_type: str) -> dict:
 
     import base64
     b64 = base64.b64encode(file_bytes).decode()
-    response = model.generate_content([
-        {"mime_type": mime_type, "data": b64},
-        prompt
-    ])
+    response = _gemini_client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=[
+            genai_new.types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
+            prompt
+        ]
+    )
     text = response.text.strip()
     # extract JSON
     m = re.search(r'\{[\s\S]+\}', text)
@@ -251,7 +253,7 @@ with col1:
 if run_btn:
     try:
         gc, drive = get_clients()
-        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+        _gemini_client = genai_new.Client(api_key=st.secrets["GEMINI_API_KEY"])
     except Exception as e:
         st.error(f"เชื่อมต่อไม่ได้: {e}")
         st.stop()
